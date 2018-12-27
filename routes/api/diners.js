@@ -29,7 +29,7 @@ router.post('/', (req, res) => {
     };
 
     const findRef = doc => {
-        return Diner.find({
+        return Diner.findOne({
             _id: doc._id
         }, {
             reservations: 0,
@@ -43,5 +43,43 @@ router.post('/', (req, res) => {
     return createDiner()
         .then(findRef);
 });
+
+// # route: PUT /api/v.1/diners/:id
+// # desc: edit/update a diner from the db
+// # access: private
+router.put('/:id', (req, res) => {
+    const updateDiner = () => {
+        return Diner.updateOne({
+            _id: req.params.id
+        }, req.body)
+            .then(doc => doc);
+    }
+
+    const findRef = () => {
+        return Diner.findOne({
+            _id: req.params.id
+        }, {
+            reservations: 0,
+            __v: 0
+        }).then(doc => {
+            console.log(`Updates one diner id: ${doc._id}`);
+            res.json(doc);
+        })
+    }
+
+    return updateDiner()
+        .then(findRef);
+})
+
+// # route: DELETE /api/v.1/diners/:id
+// # desc: remove/delete a diner from the db
+// # access: private
+router.delete('/:id', (req, res) => {
+    Diner.deleteOne({ _id: req.params.id })
+        .then(doc => {
+            console.log(`Remove one diner id: ${doc._id}`);
+            res.json(doc);
+        })
+})
 
 module.exports = router;
