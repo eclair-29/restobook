@@ -26,15 +26,18 @@ router.get('/', (req, res) => {
 // # desc: fetch a diner search results from search keyword query
 // # access: private
 router.get('/search', (req, res) => {
-    const { keyword } = req.query;
+    const { keyword, sort, page, limit } = req.query;
+    const options = {
+        limit: parseInt(limit) || 20,
+        select: '-reservations -__v',
+        page: parseInt(page) || 1,
+        sort: sort
+    }
 
-    Diner.find({
+    Diner.paginate({
         $text: { $search: keyword }
-    }, {
-        reservations: 0,
-        __v: 0
-    }).then(docs => {
-        console.log(`Search result for: ${keyword}. Found ${docs.length} diners`);
+    }, options).then(docs => {
+        console.log(`Search result for: ${keyword}. Found ${docs.docs.length} diners`);
         res.json(docs);
     })
 });
@@ -91,7 +94,7 @@ router.put('/:id', (req, res) => {
 
     return updateDiner()
         .then(findRef);
-})
+});
 
 // # route: DELETE /api/v.1/diners/:id
 // # desc: remove/delete a diner from the db
@@ -102,6 +105,6 @@ router.delete('/:id', (req, res) => {
             console.log(`Remove one diner id: ${doc._id}`);
             res.json(doc);
         })
-})
+});
 
 module.exports = router;
