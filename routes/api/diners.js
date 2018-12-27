@@ -7,18 +7,36 @@ const Diner = require('../../models/Diner');
 // # desc: fetch diner list from the db with pagination
 // # access: private
 router.get('/', (req, res) => {
-    const { page, limit } = req.query;
+    const { page, limit, sort } = req.query;
     const paginationOptions = {
         limit: parseInt(limit),
         select: '-reservations -__v',
-        page: parseInt(page)
+        page: parseInt(page),
+        sort: sort
     }
 
     Diner.paginate({}, paginationOptions)
         .then(docs => {
-            console.log(`Found ${docs.length} diners`);
+            console.log(`Found ${docs.docs.length} diners`);
             res.json(docs);
         });
+});
+
+// # route: GET /api/v.1/diner/search?keyword=eclair+29
+// # desc: fetch a diner search results from search keyword query
+// # access: private
+router.get('/search', (req, res) => {
+    const { keyword } = req.query;
+
+    Diner.find({
+        $text: { $search: keyword }
+    }, {
+        reservations: 0,
+        __v: 0
+    }).then(docs => {
+        console.log(`Search result for: ${keyword}. Found ${docs.length} diners`);
+        res.json(docs);
+    })
 });
 
 // # route: POST /api/v.1/diners

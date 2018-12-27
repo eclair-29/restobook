@@ -26,6 +26,10 @@ const DinerSchema = new Schema({
 });
 
 DinerSchema.plugin(mongoosePaginate);
+DinerSchema.index({
+    fname: 'text',
+    lname: 'text'
+});
 
 const Diner = mongoose.model('diner', DinerSchema);
 
