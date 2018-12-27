@@ -14,6 +14,7 @@ const ReservationSchema = new Schema({
     tables: [
         { type: Schema.Types.ObjectId, ref: 'table' }
     ],
+    tableCount: { type: Number, default: 0, max: 999 },
     payment: { type: Schema.Types.ObjectId, ref: 'payment' },
     dateReserved: { type: Date, default: Date.now }
 });
