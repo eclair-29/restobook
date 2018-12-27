@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const mongoosePaginate = require('mongoose-paginate');
 
 const addressSchema = new Schema({
     address: String,
@@ -23,6 +24,8 @@ const DinerSchema = new Schema({
     birthdate: Date,
     dateRegistered: { type: Date, default: Date.now }
 });
+
+DinerSchema.plugin(mongoosePaginate);
 
 const Diner = mongoose.model('diner', DinerSchema);
 

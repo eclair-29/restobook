@@ -3,6 +3,7 @@ module.exports.dbConfig = {
     settings: {
         useNewUrlParser: true,
         useFindAndModify: false,
-        useCreateIndex: true
+        useCreateIndex: true,
+        useCountDocuments: true
     }
 };

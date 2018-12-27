@@ -7,10 +7,14 @@ const Diner = require('../../models/Diner');
 // # desc: fetch diner list from the db with pagination
 // # access: private
 router.get('/', (req, res) => {
-    Diner.find({}, {
-        reservations: 0,
-        __v: 0
-    })
+    const { page, limit } = req.query;
+    const paginationOptions = {
+        limit: parseInt(limit),
+        select: '-reservations -__v',
+        page: parseInt(page)
+    }
+
+    Diner.paginate({}, paginationOptions)
         .then(docs => {
             console.log(`Found ${docs.length} diners`);
             res.json(docs);
