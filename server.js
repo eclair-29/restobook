@@ -18,11 +18,7 @@ mongoose.connection
     .on('error', err => console.log('Mongo Connection Error: ', err));
 
 // API Routes
-app.get('/', (req, res) => {
-    const message = 'Testing API Router...';
-    console.log(message);
-    res.json({ message });
-})
+app.use('/api/v.1/diners', require('./routes/api/diners'));
 
 // Port Listener
 const port = 4000 || process.env.PORT;

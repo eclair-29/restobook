@@ -1,6 +1,14 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const addressSchema = new Schema({
+    address: String,
+    city: String,
+    stateProvince: String,
+    country: String,
+    zipcode: { type: Number, max: 9999 }
+})
+
 const DinerSchema = new Schema({
     fname: { type: String, required: true },
     lname: { type: String, required: true },
@@ -9,7 +17,11 @@ const DinerSchema = new Schema({
     reservationCount: { type: Number, default: 0, max: 9999 },
     reservations: [
         { type: Schema.Types.ObjectId, ref: 'reservation' }
-    ]
+    ],
+    address: addressSchema,
+    salutation: String,
+    birthdate: Date,
+    dateRegistered: { type: Date, default: Date.now }
 });
 
 const Diner = mongoose.model('diner', DinerSchema);
