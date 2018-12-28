@@ -13,6 +13,7 @@ const TableSchema = new Schema({
 });
 
 TableSchema.plugin(mongoosePaginate);
+TableSchema.index({ tableName: 'text' });
 
 const Table = mongoose.model('table', TableSchema);
 
