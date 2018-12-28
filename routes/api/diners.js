@@ -117,11 +117,28 @@ router.put('/:id', (req, res) => {
 // # desc: remove/delete a diner from the db
 // # access: private
 router.delete('/:id', (req, res) => {
-    Diner.deleteOne({ _id: req.params.id })
-        .then(doc => {
-            console.log(`Remove one diner id: ${req.params.id}`);
-            res.json(doc);
-        })
+    const findRef = () => {
+        return Diner.findOne({ _id: req.params.id })
+            .then(doc => doc);
+    }
+
+    const removeDinerReservations = doc => {
+        return Reservation.deleteMany({
+            _id: { $in: doc.reservations }
+        }).then(docs => docs);
+    }
+
+    const removeDiner = () => {
+        return Diner.deleteOne({ _id: req.params.id })
+            .then(doc => {
+                console.log(`Remove one diner id: ${req.params.id}`);
+                res.json(doc);
+            });
+    }
+
+    return findRef()
+        .then(removeDinerReservations)
+        .then(removeDiner);
 });
 
 // # route: GET /api/v.1/diners/:id/reservations
