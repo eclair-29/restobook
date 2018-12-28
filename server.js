@@ -19,6 +19,7 @@ mongoose.connection
 
 // API Routes
 app.use('/api/v.1/diners', require('./routes/api/diners'));
+app.use('/api/v.1/reservations', require('./routes/api/reservations'));
 
 // Port Listener
 const port = 4000 || process.env.PORT;

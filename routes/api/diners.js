@@ -23,6 +23,22 @@ router.get('/', (req, res) => {
         });
 });
 
+// # route: GET /api/v.1/diners/:id
+// # desc: fetch diner info from the db
+// # access: private
+router.get('/:id', (req, res) => {
+    Diner.findOne({
+        _id: req.params.id
+    }, {
+        reservations: 0,
+        __v: 0
+    })
+        .then(doc => {
+            console.log(`Fetched one diner id: ${doc._id}`);
+            res.json(doc);
+        })
+});
+
 // # route: GET /api/v.1/diner/search?keyword=eclair+29
 // # desc: fetch a diner search results from search keyword query
 // # access: private
@@ -103,7 +119,7 @@ router.put('/:id', (req, res) => {
 router.delete('/:id', (req, res) => {
     Diner.deleteOne({ _id: req.params.id })
         .then(doc => {
-            console.log(`Remove one diner id: ${doc._id}`);
+            console.log(`Remove one diner id: ${req.params.id}`);
             res.json(doc);
         })
 });
@@ -117,8 +133,8 @@ router.get('/:id/reservations', (req, res) => {
         limit: parseInt(limit) || 20,
         select: '-__v -tables',
         page: parseInt(page) || 1,
-        sort: sort || { dateReserved: -1 },
-        populate: { path: 'diner', select: 'fname lname dateRegistered' }
+        populate: { path: 'diner', select: 'fname lname email phone' },
+        sort: sort || { dateReserved: -1 }
     };
 
     Reservation.paginate({
@@ -164,7 +180,7 @@ router.post('/:id/reservations', (req, res) => {
             __v: 0
         }).populate({
             path: 'diner',
-            select: '-reservations -__v -reservationCount'
+            select: 'fname lname email phone'
         }).then(doc => {
             console.log(`Add a new reservation id: ${doc._id} to Mr/Ms. ${doc.diner.fname} ${doc.diner.lname}`);
             res.json(doc);
