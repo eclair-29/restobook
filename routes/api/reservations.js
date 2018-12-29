@@ -3,6 +3,7 @@ const router = express.Router();
 
 const Reservation = require('../../models/Reservation');
 const Diner = require('../../models/Diner');
+const Table = require('../../models/Table');
 
 // # route: GET /api/v.1/reservations?page=1&limit=20
 // # desc: fetch all reservations from the db with pagination
@@ -28,12 +29,7 @@ router.get('/', (req, res) => {
 // # desc: fetch reservation info from the db
 // # access: private
 router.get('/:id', (req, res) => {
-    Reservation.findOne({
-        _id: req.params.id
-    }, {
-        tables: 0,
-        __v: 0
-    })
+    Reservation.findOne({ _id: req.params.id })
         .populate({ path: 'diner', select: '-reservations -__v' })
         .then(doc => {
             console.log(`Fetched one reservation id: ${doc._id}`);
@@ -94,5 +90,49 @@ router.delete('/:id', (req, res) => {
    return updateDinerReservation()
     .then(removeDinerReservation);
 });
+
+// # route: PUT /api/v.1/reservations/:id/tables
+// # desc: update reservation tables from the db
+// # access: private
+router.put('/:id/tables', (req, res) => {
+    const addTableSet = () => {
+        return Reservation.updateOne({
+            _id: req.params.id
+        }, {
+            $addToSet: { tables: req.body },
+            $inc: { tableCount: req.body.length },
+            $set: { status: 'pending' }
+        }).then(doc => doc);
+    }
+
+    const updateTableState = () => {
+        return Table.updateMany({
+            _id: { $in: req.body }
+        }, {
+            $addToSet: { reservations: req.params.id },
+            $inc: { reservationCount: 1 }
+        }).then(docs => docs);
+    }
+
+    const findRef = () => {
+        return Reservation.findOne({ _id: req.params.id }, { __v: 0 })
+            .populate({
+                path: 'diner',
+                select: 'fname lname email phone'
+            })
+            .populate({
+                path: 'tables',
+                select: '-reservations -__v'
+            })
+            .then(doc => {
+                console.log(`Update tables for a reservation id: ${doc._id}`);
+                res.json(doc);
+            })
+    }
+
+    return addTableSet()
+        .then(updateTableState)
+        .then(findRef);
+})
 
 module.exports = router;

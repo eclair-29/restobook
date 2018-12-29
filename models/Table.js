@@ -9,7 +9,8 @@ const TableSchema = new Schema({
         { type: Schema.Types.ObjectId, ref: 'reservation' }
     ],
     reservationCount: { type: Number, default: 0, max: 9999 },
-    dateAdded: { type: Date, default: Date.now }
+    dateAdded: { type: Date, default: Date.now },
+    isRemoved: { type: Boolean, default: false }
 });
 
 TableSchema.plugin(mongoosePaginate);

@@ -32,11 +32,10 @@ router.get('/:id', (req, res) => {
     }, {
         reservations: 0,
         __v: 0
+    }).then(doc => {
+        console.log(`Fetched one diner id: ${doc._id}`);
+        res.json(doc);
     })
-        .then(doc => {
-            console.log(`Fetched one diner id: ${doc._id}`);
-            res.json(doc);
-        })
 });
 
 // # route: GET /api/v.1/diner/search?keyword=eclair+29
@@ -150,7 +149,6 @@ router.get('/:id/reservations', (req, res) => {
         limit: parseInt(limit) || 20,
         select: '-__v -tables',
         page: parseInt(page) || 1,
-        populate: { path: 'diner', select: 'fname lname email phone' },
         sort: sort || { dateReserved: -1 }
     };
 
