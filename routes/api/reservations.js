@@ -30,7 +30,14 @@ router.get('/', (req, res) => {
 // # access: private
 router.get('/:id', (req, res) => {
     Reservation.findOne({ _id: req.params.id })
-        .populate({ path: 'diner', select: '-reservations -__v' })
+        .populate({
+            path: 'diner',
+            select: '-reservations -__v'
+        })
+        .populate({
+            path: 'tables',
+            select: '-reservations -__v'
+        })
         .then(doc => {
             console.log(`Fetched one reservation id: ${doc._id}`);
             res.json(doc);

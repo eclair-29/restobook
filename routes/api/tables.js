@@ -117,10 +117,10 @@ router.put('/:id', (req, res) => {
 // # access: private
 router.delete('/:id', (req, res) => {
     const updateRemoveState = () => {
-        return Table.updateOne({
-            _id: req.params.id
+        return Reservation.updateOne({
+            tables: req.params.id
         }, {
-            isRemoved: true
+            $pull: { tables: req.params.id }
         }).then(doc => doc);
     }
 
