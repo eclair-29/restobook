@@ -140,6 +140,6 @@ router.put('/:id/tables', (req, res) => {
     return addTableSet()
         .then(updateTableState)
         .then(findRef);
-})
+});
 
 module.exports = router;

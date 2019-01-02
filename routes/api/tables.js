@@ -120,7 +120,8 @@ router.delete('/:id', (req, res) => {
         return Reservation.updateOne({
             tables: req.params.id
         }, {
-            $pull: { tables: req.params.id }
+            $pull: { tables: req.params.id },
+            $inc: { tableCount: -1 }
         }).then(doc => doc);
     }
 
