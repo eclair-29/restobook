@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
+const Payment = require('../../models/Payment');
 const Reservation = require('../../models/Reservation');
 const Diner = require('../../models/Diner');
 const Table = require('../../models/Table');
@@ -29,7 +30,11 @@ router.get('/', (req, res) => {
 // # desc: fetch reservation info from the db
 // # access: private
 router.get('/:id', (req, res) => {
-    Reservation.findOne({ _id: req.params.id })
+    Reservation.findOne({
+         _id: req.params.id
+    }, {
+        __v: 0
+    })
         .populate({
             path: 'diner',
             select: '-reservations -__v'
@@ -37,6 +42,10 @@ router.get('/:id', (req, res) => {
         .populate({
             path: 'tables',
             select: '-reservations -__v'
+        })
+        .populate({
+            path: 'payment',
+            select: '-guestsCount -__v'
         })
         .then(doc => {
             console.log(`Fetched one reservation id: ${doc._id}`);
@@ -140,6 +149,84 @@ router.put('/:id/tables', (req, res) => {
     return addTableSet()
         .then(updateTableState)
         .then(findRef);
+});
+
+// # route: POST /api/v.1/reservations/:id/payment
+// # desc: add a payment details for a ref reservation
+// # access: private
+router.post('/:id/payment', (req, res) => {
+    const findRef = () => {
+        return Reservation.findOne({ _id: req.params.id })
+            .then(doc => doc);
+    }
+
+    const savePayment = doc => {
+        const newPayment = new Payment({
+            _id: req.params.id,
+            dateOfPayment: req.body.dateOfPayment,
+            guestsCount: doc.guestsCount,
+            ...req.body
+        });
+
+        return newPayment.save()
+            .then(doc => doc);
+    };
+
+    const calculateTotalFee = doc => {
+        return Payment.updateOne({
+            _id: doc._id
+        }, {
+            totalAmount: doc.guestsCount * doc.chargePerHead,
+        }).then(doc => doc);
+    }
+
+    const findPayment = doc => {
+        return Payment.findOne({ _id: req.params.id})
+            .then(doc => doc);
+    }
+
+    const calculateDepositFee = doc => {
+        const computationA = doc.totalAmount * doc.depositPercentage;
+        const computationB = doc.totalAmount - computationA;
+
+        return Payment.updateOne({
+            _id: req.params.id
+        }, {
+            depositFee: computationB
+        }).then(doc => doc);
+    }
+
+    const updateRef = doc =>  {
+        return Reservation.updateOne({
+            _id: req.params.id
+        }, {
+            status: 'confirmed',
+            $set: { payment: req.params.id }
+        }).then(doc => doc)
+    }
+
+    const populatePayment = () => {
+        return Reservation.findOne({
+            _id: req.params.id
+        }, {
+            tables: 0,
+            __v: 0
+        })
+            .populate({ path: 'diner', select: '-dateRegistered -reservations -__v' })
+            .populate({ path: 'payment', select: '-guestsCount -__v' })
+            .then(doc => {
+                console.log(`Save one reservation payment id: ${doc._id}`);
+                res.json(doc);
+            })
+    }
+
+    return findRef()
+        .then(savePayment)
+        .then(calculateTotalFee)
+        .then(findPayment)
+        .then(calculateDepositFee)
+        .then(updateRef)
+        .then(populatePayment);
 });
 
 module.exports = router;
