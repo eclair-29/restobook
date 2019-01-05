@@ -65,6 +65,40 @@ router.put('/:id', (req, res) => {
     }
 
     const findRef = () => {
+        return Reservation.findOne({ _id: req.params.id })
+            .then(doc => doc);
+    }
+
+    const updatePayment = doc => {
+        return Payment.updateOne({
+            _id: req.params.id
+        }, {
+            guestsCount: doc.guestsCount
+        }).then(doc => doc);
+    }
+
+    const findPayment = () => {
+        return Payment.findOne({ _id: req.params.id })
+            .then(doc => doc);
+    }
+
+    const recalculateTotalAmount = doc => {
+        return Payment.updateOne({
+            _id: doc._id
+        }, {
+            totalAmount: doc.guestsCount * doc.chargePerHead
+        }).then(doc => doc);
+    }
+
+    const recalculateDeposit = doc => {
+        return Payment.updateOne({
+            _id: doc._id
+        }, {
+            depositFee: doc.totalAmount - (doc.totalAmount * doc.depositPercentage)
+        }).then(doc => doc);
+    }
+
+    const populateReservation = () => {
         return Reservation.findOne({
             _id: req.params.id
         }, {
@@ -72,6 +106,7 @@ router.put('/:id', (req, res) => {
             __v: 0
         })
             .populate({ path: 'diner', select: '-reservations -__v' })
+            .populate({ path: 'payment', select: '-guestsCount -__v' })
             .then(doc => {
                 console.log(`Update one reservation id: ${doc._id}`);
                 res.json(doc);
@@ -79,7 +114,13 @@ router.put('/:id', (req, res) => {
     }
 
     return updateReservation()
-        .then(findRef);
+        .then(findRef)
+        .then(updatePayment)
+        .then(findPayment)
+        .then(recalculateTotalAmount)
+        .then(findPayment)
+        .then(recalculateDeposit)
+        .then(populateReservation);
 });
 
 // # route: DELETE /api/v.1/reservations/:id
@@ -95,6 +136,11 @@ router.delete('/:id', (req, res) => {
        }).then(doc => doc);
    }
 
+   const deletePayment = () => {
+       return Payment.deleteOne({ _id: req.params.id })
+        .then(doc => doc)
+   }
+
    const removeDinerReservation = () => {
        return Reservation.deleteOne({ _id: req.params.id })
         .then(doc => {
@@ -104,6 +150,7 @@ router.delete('/:id', (req, res) => {
    }
 
    return updateDinerReservation()
+    .then(deletePayment)
     .then(removeDinerReservation);
 });
 
@@ -151,10 +198,10 @@ router.put('/:id/tables', (req, res) => {
         .then(findRef);
 });
 
-// # route: POST /api/v.1/reservations/:id/payment
+// # route: GET /api/v.1/reservations/:id/payment
 // # desc: add a payment details for a ref reservation
 // # access: private
-router.post('/:id/payment', (req, res) => {
+router.get('/:id/payment', (req, res) => {
     const findRef = () => {
         return Reservation.findOne({ _id: req.params.id })
             .then(doc => doc);
@@ -180,7 +227,7 @@ router.post('/:id/payment', (req, res) => {
         }).then(doc => doc);
     }
 
-    const findPayment = doc => {
+    const findPayment = () => {
         return Payment.findOne({ _id: req.params.id})
             .then(doc => doc);
     }
@@ -201,7 +248,7 @@ router.post('/:id/payment', (req, res) => {
             _id: req.params.id
         }, {
             status: 'confirmed',
-            $set: { payment: req.params.id }
+            payment: req.params.id
         }).then(doc => doc)
     }
 
